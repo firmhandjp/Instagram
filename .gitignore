@@ -1,0 +1,27 @@
+# Claude Code のローカル設定
+.claude/
+
+# Windows が自動生成するファイル
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+
+# エディタ
+.vscode/
+.idea/
+*.swp
+
+# 環境変数・秘密情報
+.env
+.env.local
+*.pem
+*.key
+
+# ログ・一時ファイル
+*.log
+tmp/
+temp/
