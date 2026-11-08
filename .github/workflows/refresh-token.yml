@@ -1,0 +1,24 @@
+name: refresh-token
+
+on:
+  schedule:
+    - cron: "0 0 1,15 * *" # 毎月1日と15日（トークンは約60日で切れるため余裕を持って更新）
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install .
+      - run: python -m aibot refresh-token
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          GH_ADMIN_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
