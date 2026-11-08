@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 from .collect import fetch_articles, select_candidates
 from .config import load_config
 from .history import load_posted, normalize_url, record_posted
-from .instagram import InstagramError, publish_image, refresh_token
+from .instagram import InstagramError, publish_image, refresh_token, wait_for_image
 from .models import Draft
 from .render import render_image
 from .write import DraftError, generate_draft
@@ -85,6 +85,7 @@ def cmd_publish(args, env: dict, root: Path) -> int:
         print("この記事は投稿済みです。何もしません。")
         return 0
     try:
+        wait_for_image(_image_url(env, draft.date))
         post_id = publish_image(
             _image_url(env, draft.date), draft.caption, env["INSTAGRAM_USER_ID"], env["INSTAGRAM_ACCESS_TOKEN"]
         )

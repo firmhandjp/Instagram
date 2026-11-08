@@ -49,3 +49,23 @@ def test_select_excludes_posted_with_tracking_params():
 def test_select_respects_limit():
     arts = [_art(f"https://e.com/{i}") for i in range(5)]
     assert len(select_candidates(arts, set(), 3)) == 3
+
+
+def test_default_fetch_sends_user_agent_and_timeout(monkeypatch):
+    import socket
+
+    import aibot.collect as collect
+
+    seen = {}
+    real_parse = feedparser.parse
+
+    def fake_parse(url, agent=None):
+        seen["agent"] = agent
+        seen["timeout"] = socket.getdefaulttimeout()
+        return real_parse("<rss/>")
+
+    monkeypatch.setattr(collect.feedparser, "parse", fake_parse)
+    collect.default_fetch("https://x.example/rss")
+    assert seen["agent"] and "Mozilla" in seen["agent"]
+    assert seen["timeout"] == collect.FETCH_TIMEOUT
+    assert socket.getdefaulttimeout() != collect.FETCH_TIMEOUT  # 後始末されている

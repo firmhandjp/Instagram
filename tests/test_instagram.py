@@ -82,3 +82,24 @@ def test_refresh_token_missing_in_response():
     responses.get(f"{BASE}/refresh_access_token", json={"expires_in": 1})
     with pytest.raises(InstagramError):
         refresh_token("OLD")
+
+
+@responses.activate
+def test_wait_for_image_retries_until_available():
+    from aibot.instagram import wait_for_image
+
+    url = "https://raw.example/a.jpg"
+    responses.head(url, status=404)
+    responses.head(url, status=200)
+    wait_for_image(url, sleep=lambda s: None)
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_wait_for_image_gives_up():
+    from aibot.instagram import wait_for_image
+
+    url = "https://raw.example/a.jpg"
+    responses.head(url, status=404)
+    with pytest.raises(InstagramError):
+        wait_for_image(url, sleep=lambda s: None)

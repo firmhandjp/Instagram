@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import socket
 import sys
 from datetime import datetime, timedelta, timezone
 
@@ -10,11 +11,25 @@ from .history import normalize_url
 from .models import Article
 
 
+FETCH_TIMEOUT = 30
+USER_AGENT = "Mozilla/5.0 (compatible; aibot/0.1; +https://github.com)"
+
+
+def default_fetch(url: str):
+    """時間制限と User-Agent を付けて RSS を取得する（遅い・拒否する情報源で止まらないように）。"""
+    old = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(FETCH_TIMEOUT)
+    try:
+        return feedparser.parse(url, agent=USER_AGENT)
+    finally:
+        socket.setdefaulttimeout(old)
+
+
 def fetch_articles(
     feeds: list[Feed],
     now: datetime,
     lookback_hours: int,
-    fetch=feedparser.parse,
+    fetch=default_fetch,
 ) -> list[Article]:
     """各情報源から直近 lookback_hours 時間の記事を集める。壊れた情報源は飛ばす。"""
     since = now - timedelta(hours=lookback_hours)

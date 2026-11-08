@@ -17,6 +17,12 @@ DRAFT = Draft("見出し", "解説\n\n出典: 媒体 https://e.com/a\n\n#AI #a #
 ART = Article("t", "https://e.com/a", "媒体", "s", datetime(2026, 11, 8, 22, tzinfo=timezone.utc))
 
 
+@pytest.fixture(autouse=True)
+def _no_real_image_wait(monkeypatch):
+    # 実際のネットワーク待機を避ける（待機そのものは専用テストで確認）
+    monkeypatch.setattr(cli, "wait_for_image", lambda url: None)
+
+
 @pytest.fixture
 def root(tmp_path):
     shutil.copy(REPO / "config.toml", tmp_path / "config.toml")
@@ -123,3 +129,12 @@ def test_refresh_token_never_prints_token(root, monkeypatch, capsys):
     assert stored == [("INSTAGRAM_ACCESS_TOKEN", "BRAND-NEW-TOKEN")]
     shown = out.out + out.err
     assert "BRAND-NEW-TOKEN" not in shown and "OLD-TOKEN" not in shown
+
+
+def test_publish_waits_for_image_before_posting(root, monkeypatch):
+    _write_draft(root)
+    order = []
+    monkeypatch.setattr(cli, "wait_for_image", lambda url: order.append(("wait", url)))
+    monkeypatch.setattr(cli, "publish_image", lambda *a: order.append(("post", a[0])) or "p1")
+    assert cli.main(["publish", "--date", "2026-11-09"], env=_env(root), root=root) == 0
+    assert [o[0] for o in order] == ["wait", "post"]

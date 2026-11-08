@@ -74,3 +74,15 @@ def refresh_token(token: str) -> str:
     if not new:
         raise InstagramError("新しいトークンが返りませんでした")
     return new
+
+
+def wait_for_image(url: str, sleep=time.sleep, tries: int = 12, interval: int = 10) -> None:
+    """画像のURLが公開されるまで待つ（push 直後は取得できないことがあるため）。"""
+    for _ in range(tries):
+        try:
+            if requests.head(url, timeout=TIMEOUT, allow_redirects=True).status_code == 200:
+                return
+        except requests.RequestException:
+            pass
+        sleep(interval)
+    raise InstagramError("画像のURLが公開されませんでした")
