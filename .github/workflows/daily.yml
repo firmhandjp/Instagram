@@ -1,0 +1,75 @@
+name: daily
+
+on:
+  schedule:
+    - cron: "0 22 * * *" # 毎朝 7:00 JST
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "練習モード（下書きだけ作り、投稿しない）"
+        type: boolean
+        default: true
+
+concurrency:
+  group: instagram-daily
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      date: ${{ steps.draft.outputs.date }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install .
+      - id: draft
+        run: python -m aibot draft
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: 下書きを保存する（画像を公開URLにするため main に push）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add drafts
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "chore: ${{ steps.draft.outputs.date }} の下書きを追加"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+  publish:
+    needs: draft
+    if: github.event.inputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: instagram-publish # ここで承認ボタンが出る
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main # 下書きの画像を含む最新の main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install .
+      - run: python -m aibot publish --date ${{ needs.draft.outputs.date }}
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+      - name: 投稿履歴を保存する
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/posted.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "chore: 投稿履歴を更新"
+          git pull --rebase origin main
+          git push origin HEAD:main

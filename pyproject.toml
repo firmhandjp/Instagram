@@ -1,0 +1,26 @@
+[project]
+name = "aibot"
+version = "0.1.0"
+description = "AIニュースを毎日Instagramに投稿する"
+requires-python = ">=3.11"
+dependencies = [
+    "feedparser>=6.0",
+    "pillow>=10.0",
+    "anthropic>=0.40",
+    "requests>=2.31",
+    "tzdata",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "responses"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
