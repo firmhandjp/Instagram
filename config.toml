@@ -1,0 +1,32 @@
+# ニュースの情報源は、[[news.feeds]] のかたまりを足すだけで増やせます。
+
+[news]
+lookback_hours = 24   # 何時間前までの記事を候補にするか
+max_candidates = 15   # Claudeに見せる候補の最大数
+
+[[news.feeds]]
+name = "ITmedia AI+"
+url = "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml"
+
+[[news.feeds]]
+name = "OpenAI"
+url = "https://openai.com/news/rss.xml"
+
+[[news.feeds]]
+name = "Google DeepMind"
+url = "https://deepmind.google/blog/rss.xml"
+
+[[news.feeds]]
+name = "Google AI"
+url = "https://blog.google/technology/ai/rss/"
+
+[[news.feeds]]
+name = "MIT Technology Review"
+url = "https://www.technologyreview.com/topic/artificial-intelligence/feed"
+
+[claude]
+model = "claude-sonnet-5-5"
+
+[image]
+width = 1080
+height = 1350
